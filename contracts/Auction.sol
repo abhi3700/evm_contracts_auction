@@ -3,9 +3,10 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./dependencies/ReentrancyGuard.sol";
 import "./dependencies/CheckContract.sol";
 
-contract Auction is Pausable, CheckContract {
+contract Auction is Pausable, CheckContract, ReentrancyGuard {
     // ==========State variables====================================
     mapping(address => uint256) public currentbids;
     address public owner;
@@ -15,6 +16,7 @@ contract Auction is Pausable, CheckContract {
     uint256 public endsAt;
     uint256 public highestBid;
     address public highestBidder;
+    address public auctionRepository;
 
     // ==========Events====================================
     event AuctionCreated(address indexed asset, uint256 creationTime, uint256 startsAt, uint256 endsAt);
@@ -37,20 +39,22 @@ contract Auction is Pausable, CheckContract {
     }
 
     // ==========Constructor====================================
+    constructor() {
+        auctionRepository = msg.sender;
+    }
     // ==========Functions====================================
     /// @notice should return the auction contract address
-    function auctionCreation(address _asset, uint256 _startsAt, uint256 _endsAt) public returns (bool) {
-        checkContract(_asset);
-        require(_startsAt > block.timestamp, "startsAt > creationTime");
-        require(_endsAt > _startsAt, "endsAt < startsAt");
 
+    function initialize(address _asset, uint256 _startsAt, uint256 _endsAt) external returns (bool) {
+        require(msg.sender == auctionRepository, "only auctionRepository");
+
+        // input validation is done only at factory level inside AuctionRepository
         creationTime = block.timestamp;
         owner = msg.sender;
         asset = _asset;
         startsAt = _startsAt;
         endsAt = _endsAt;
 
-        // TODO: check if any id or status is required when auction is created.
         emit AuctionCreated(_asset, creationTime, startsAt, endsAt);
 
         return true;
@@ -59,9 +63,9 @@ contract Auction is Pausable, CheckContract {
     /// @notice place bid more than the highest bid amount in chain token like ETH
     /// @dev bidder can place bid only once.
     function placeBid() public payable allowAfterStart notAfterEnd returns (bool) {
-        require(msg.value > highestBid, "Bid < highest bid");
         require(block.timestamp > startsAt, "< startsAt");
         require(block.timestamp < endsAt, "> endsAt");
+        require(msg.value > highestBid, "Bid < highest bid");
         require(currentbids[msg.sender] == 0, "can bid only once");
 
         _setBid(msg.sender, msg.value);
@@ -79,11 +83,11 @@ contract Auction is Pausable, CheckContract {
         highestBidder = _bidder;
     }
 
-    /// @notice should withdraw the highest bid
-    /// @dev can withdraw only after auction ends
-    function withdraw() external returns (bool) {
+    /// @notice should withdraw the previous highest bids
+    /// @dev can withdraw irrespective of the auction status (started or ended).
+    function withdraw() external nonReentrant returns (bool) {
         uint256 amount = currentbids[msg.sender];
-        // NOTE: Here, withdrawal of bid amount is possible irrespecitve of the auction status (started or ended).
+        // NOTE: Here, withdrawal of bid amount is possible irrespective of the auction status (started or ended).
         require(amount != highestBid, "highest bidder cannot withdraw");
         currentbids[msg.sender] = 0;
 

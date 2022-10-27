@@ -10,7 +10,7 @@ interface IAuction {
     function creationTime() external view returns (uint256);
     function startsAt() external view returns (uint256);
     function endsAt() external view returns (uint256);
-    function auctionCreation(address _asset, uint256 _startsAt, uint256 _endsAt) external returns (bool);
+    function initialize(address _asset, uint256 _startsAt, uint256 _endsAt) external returns (bool);
     function bid() external payable;
     function withdraw() external returns (bool);
 }
