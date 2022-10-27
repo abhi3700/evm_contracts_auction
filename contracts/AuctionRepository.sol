@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "./dependencies/CheckContract.sol";
 // import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IAuction.sol";
+import "./Auction.sol";
 
 /// @title A Auction Repository SC
 /// @author abhi3700
@@ -21,13 +22,25 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
 
     // ==========Functions====================================
 
-    function createAuction(address _asset, uint256 _creationTime, uint256 _startsAt, uint256 _endsAt)
+    function createAuction(address _asset, uint256 _startsAt, uint256 _endsAt)
         external
         whenNotPaused
         returns (address auction)
     {
+        checkContract(_asset);
+        require(_startsAt > block.timestamp, "startsAt > creationTime");
+        require(_endsAt > _startsAt, "endsAt < startsAt");
+
         // TODO: create a auction contract
-        // auction = new Auction(_asset, creationTime, startsAt, endsAt, reservePrice);
+        bytes memory bytecode = type(Auction).creationCode;
+        bytes32 salt = keccak256(abi.encodePacked(_asset, _startsAt, _endsAt));
+        assembly {
+            auction := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        IAuction(auction).initialize(_asset, _startsAt, _endsAt);
+
+        liveAuctions[_asset].push(auction);
+        auctionHistory[_asset].push(auction);
 
         emit AuctionCreated(auction, _asset);
     }
@@ -41,16 +54,17 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
     }
 
     /// @notice should return details of an auction
-    function fetchAuction(address auctionContract)
+    /// @param _auctionContract the auction for which the details are to be returned
+    function fetchAuction(address _auctionContract)
         external
         view
         returns (address asset, uint256 creationTime, uint256 startsAt, uint256 endsAt)
     {
-        checkContract(auctionContract);
-        asset = IAuction(auctionContract).asset();
-        creationTime = IAuction(auctionContract).creationTime();
-        startsAt = IAuction(auctionContract).startsAt();
-        endsAt = IAuction(auctionContract).endsAt();
+        checkContract(_auctionContract);
+        asset = IAuction(_auctionContract).asset();
+        creationTime = IAuction(_auctionContract).creationTime();
+        startsAt = IAuction(_auctionContract).startsAt();
+        endsAt = IAuction(_auctionContract).endsAt();
     }
 
     // ------------------------------------------------------------------------------------------

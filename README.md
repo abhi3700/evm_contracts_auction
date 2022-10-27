@@ -9,6 +9,13 @@
   - withdraw the bid amount when a higher bid is placed.
 
 - Auction SC contains all the logic & storage for bidding, withdrawing bid amount, etc.
+- For ERC721 asset:
+  - tokenId,
+  - IERC721,
+  - tokenIdOwner,
+  - transfer the ownership to the auction SC.
+  - transfer the ownership to the highest bidder, if any after the end time.
+  - reclaim the ownership back to the owner, if no one bids after the end time.
 - The highest bidder automatically becomes the owner of the asset when the auction ends.
 - **Feedback**
 
@@ -141,12 +148,12 @@ $ npx hardhat node
 $ yarn hardhat deploy:Escrow --network localhost
 ```
 
-#### ETH Testnet - Rinkeby
+#### ETH Testnet - Goerli
 
 - Deploy the contracts
 
 ```console
-yarn hardhat deploy:Escrow --network rinkeby
+yarn hardhat deploy:Escrow --network goerli
 ```
 
 #### ETH Mainnet
