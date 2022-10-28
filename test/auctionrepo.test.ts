@@ -7,7 +7,6 @@ import {
   ZERO_ADDRESS,
   getCurrentBlockTimestamp,
   setTimestamp,
-  setNextTimestamp,
 } from "./testUtils";
 
 import { ONE_DAY, TWO_DAYS, THREE_WEEKS } from "./helper";
@@ -16,7 +15,7 @@ chai.use(solidity);
 const { expect } = chai;
 
 export function testAuctionRepo(): void {
-  describe("Auction Repository contract", () => {
+  describe("AuctionRepository contract", () => {
     let owner: SignerWithAddress,
       owner2: SignerWithAddress,
       alice: SignerWithAddress,
@@ -53,6 +52,12 @@ export function testAuctionRepo(): void {
         await expect(auctionRepoContract.transferOwnership(owner2.address))
           .to.emit(auctionRepoContract, "OwnershipTransferred")
           .withArgs(owner.address, owner2.address);
+      });
+
+      it("Non-owner should not be able to transfer ownership", async () => {
+        await expect(
+          auctionRepoContract.connect(alice).transferOwnership(owner2.address)
+        ).to.be.revertedWith("Ownable: caller is not the owner");
       });
     });
 

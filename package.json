@@ -8,7 +8,7 @@
     "compile": "hardhat compile",
     "contract-size": "hardhat size-contracts",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js --temp build --network hardhat",
-    "deploy": "hardhat run --network localhost deployment/deploy.ts",
+    "deploy-local": "hardhat run --network localhost deployment/deploy.ts",
     "deploy-goerli": "hardhat run --network goerli deployment/deploy.ts",
     "deploy-eth": "hardhat run --network eth deployment/deploy.ts",
     "flatten": "hardhat flatten",

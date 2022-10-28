@@ -4,11 +4,11 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./dependencies/CheckContract.sol";
-import "./dependencies/IGenericERC20.sol";
+import "./interfaces/IGenericERC20.sol";
 import "./interfaces/IAuction.sol";
 import "./Auction.sol";
 import "./dependencies/ReentrancyGuard.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 /// @title A Auction Repository SC
 /// @author abhi3700
@@ -55,7 +55,7 @@ contract AuctionRepository is Ownable, Pausable, CheckContract, ReentrancyGuard 
             auction := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
         // console.log("Auction created: %s", auction);
-        IAuction(auction).initialize(_asset, _startsAt, _endsAt);
+        IAuction(auction).initialize(owner(), msg.sender, _asset, _startsAt, _endsAt);
 
         liveAuctions[_asset].push(auction);
         allAuctions[_asset].push(auction);
