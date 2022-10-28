@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./dependencies/CheckContract.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./dependencies/IGenericERC20.sol";
 import "./interfaces/IAuction.sol";
 import "./Auction.sol";
 
@@ -14,6 +14,8 @@ import "./Auction.sol";
 /// @dev A Auction Repository SC
 contract AuctionRepository is Ownable, Pausable, CheckContract {
     // ==========State variables====================================
+    // NOTE: for ERC20, 1 asset can have only 1 auction.
+    // But, for NFT standards like ERC721, 1 asset can have multiple auctions with unique token ids.
     mapping(address => address[]) public liveAuctions; // list of live auctions for an asset
     // mapping(address => address[]) public auctionHistory; // list of historic auctions for an asset
     mapping(address => address[]) public allAuctions; // list of all auctions for an asset
@@ -30,8 +32,10 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
         returns (address auction)
     {
         require(checkContract(_asset), "Asset not a contract");
-        require(_startsAt > block.timestamp, "startsAt > current time");
+        require(IGenericERC20(_asset).owner() == msg.sender, "Only asset owner can create auction");
+        require(_startsAt > block.timestamp, "startsAt < now");
         require(_endsAt > _startsAt, "endsAt < startsAt");
+        require(liveAuctions[_asset].length == 0, "Auction already exists");
 
         bytes memory bytecode = type(Auction).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(_asset, _startsAt, _endsAt));

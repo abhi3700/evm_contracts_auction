@@ -135,18 +135,18 @@ Then, the file can be used to upload the code manually (click on 'Contract' tab 
 
 ```console
 // on terminal-1
-$ npx hardhat node
+npx hardhat node
 
 // on terminal-2
-$ yarn hardhat deploy:Escrow --network localhost
+yarn deploy
 ```
 
-#### ETH Testnet - Rinkeby
+#### ETH Testnet - Goerli
 
 - Deploy the contracts
 
 ```console
-yarn hardhat deploy:Escrow --network rinkeby
+yarn deploy-goerli
 ```
 
 #### ETH Mainnet
@@ -154,5 +154,5 @@ yarn hardhat deploy:Escrow --network rinkeby
 - Deploy the contracts
 
 ```console
-yarn hardhat deploy:Escrow --network mainnet
+yarn deploy-eth
 ```

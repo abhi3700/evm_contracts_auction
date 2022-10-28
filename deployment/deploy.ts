@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   await genericERC20Contract.deployed();
   console.log("Asset SC deployed to: ", genericERC20Contract.address);
   console.log(
-    `The transaction that was sent to the network to deploy the Asset contract: ${genericERC20Contract.deployTransaction.hash}`
+    `Asset contract deployed with txn hash: ${genericERC20Contract.deployTransaction.hash}`
   );
   // -----------------------------------------------------
   // We get the AuctionRepository contract to deploy
@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     auctionRepositoryContract.address
   );
   console.log(
-    `The transaction that was sent to the network to deploy the auction repository contract: ${auctionRepositoryContract.deployTransaction.hash}`
+    `AuctionRepository SC deployed with txn hash: ${auctionRepositoryContract.deployTransaction.hash}`
   );
 }
 

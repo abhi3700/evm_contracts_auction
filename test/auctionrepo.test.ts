@@ -5,7 +5,7 @@ import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ZERO_ADDRESS, getCurrentBlockTimestamp } from "./testUtils";
 
-import { ONE_DAY, THREE_WEEKS } from "./helper";
+import { ONE_DAY, TWO_DAYS, THREE_WEEKS } from "./helper";
 
 chai.use(solidity);
 const { expect } = chai;
@@ -100,7 +100,7 @@ export function testAuctionRepo(): void {
         ).to.be.revertedWith("Pausable: paused");
       });
 
-      it("should be able to create an auction", async () => {
+      it("Only owner should be able to create an auction", async () => {
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -117,14 +117,7 @@ export function testAuctionRepo(): void {
         );
       });
 
-      it("should be able to create multiple auctions for same asset", async () => {
-        await auctionRepoContract
-          .connect(owner)
-          .createAuction(
-            assetContract.address,
-            (await getCurrentBlockTimestamp()) + ONE_DAY,
-            (await getCurrentBlockTimestamp()) + THREE_WEEKS
-          );
+      it("owner should not be able to create multiple auctions for same asset", async () => {
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -139,12 +132,20 @@ export function testAuctionRepo(): void {
         expect(auctionAddresses[auctionAddresses.length - 1]).to.not.equal(
           ZERO_ADDRESS
         );
-        expect(auctionAddresses[auctionAddresses.length - 2]).to.not.equal(
-          ZERO_ADDRESS
-        );
+
+        // create another auction for the same asset
+        await expect(
+          auctionRepoContract
+            .connect(owner)
+            .createAuction(
+              assetContract.address,
+              (await getCurrentBlockTimestamp()) + ONE_DAY,
+              (await getCurrentBlockTimestamp()) + THREE_WEEKS
+            )
+        ).to.be.revertedWith("Auction already exists");
       });
 
-      it("should be able to create multiple auctions for different assets", async () => {
+      it("1 owner should be able to create multiple auctions for different assets", async () => {
         const assetContract2: Contract = await GenericERC20Factory.deploy(
           "Rapid Innovation Token 2",
           "RAPIDO",
@@ -180,12 +181,10 @@ export function testAuctionRepo(): void {
         );
       });
 
-      it("should be able to create multiple auctions for different assets and different owners", async () => {
-        const assetContract2: Contract = await GenericERC20Factory.deploy(
-          "Rapid Innovation Token 2",
-          "RAPIDO",
-          9
-        );
+      it("should be able to create multiple auctions for different assets by different owners", async () => {
+        const assetContract2: Contract = await GenericERC20Factory.connect(
+          owner2
+        ).deploy("Rapid Innovation Token 2", "RAPIDO", 9);
         await assetContract2.deployed();
 
         await auctionRepoContract
@@ -239,6 +238,30 @@ export function testAuctionRepo(): void {
               (await getCurrentBlockTimestamp()) + THREE_WEEKS
             )
         ).to.be.revertedWith("Asset not a contract");
+      });
+
+      it("should fail when startsAt < now", async () => {
+        await expect(
+          auctionRepoContract
+            .connect(owner)
+            .createAuction(
+              assetContract.address,
+              (await getCurrentBlockTimestamp()) - ONE_DAY,
+              (await getCurrentBlockTimestamp()) + THREE_WEEKS
+            )
+        ).to.be.revertedWith("startsAt < now");
+      });
+
+      it("should fail when endsAt < startsAt", async () => {
+        await expect(
+          auctionRepoContract
+            .connect(owner)
+            .createAuction(
+              assetContract.address,
+              (await getCurrentBlockTimestamp()) + TWO_DAYS,
+              (await getCurrentBlockTimestamp()) + ONE_DAY
+            )
+        ).to.be.revertedWith("endsAt < startsAt");
       });
     });
 
