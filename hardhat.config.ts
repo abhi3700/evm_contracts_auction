@@ -74,7 +74,7 @@ const config: HardhatUserConfig = {
     // coverage: {
     //   url: "http://127.0.0.1:8555",
     // },
-    mainnet: {
+    eth: {
       url: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
       chainId: 1,
       accounts: [`0x${DEPLOYER_PRIVATE_KEY}`],

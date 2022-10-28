@@ -4,9 +4,12 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./dependencies/ReentrancyGuard.sol";
-import "./dependencies/CheckContract.sol";
 
-contract Auction is Pausable, CheckContract, ReentrancyGuard {
+/// @title Auction Contract
+/// @author @abhi3700
+/// @notice Auction contract is kept separate & managed by AuctionRepository
+/// @dev Auction contract which contains all data & related functions
+contract Auction is Pausable, ReentrancyGuard {
     // ==========State variables====================================
     mapping(address => uint256) public currentbids;
     address public owner;
@@ -45,7 +48,7 @@ contract Auction is Pausable, CheckContract, ReentrancyGuard {
     // ==========Functions====================================
     /// @notice should return the auction contract address
 
-    function initialize(address _asset, uint256 _startsAt, uint256 _endsAt) external returns (bool) {
+    function initialize(address _asset, uint256 _startsAt, uint256 _endsAt) external whenNotPaused returns (bool) {
         require(msg.sender == auctionRepository, "only auctionRepository");
 
         // input validation is done only at factory level inside AuctionRepository
@@ -62,7 +65,7 @@ contract Auction is Pausable, CheckContract, ReentrancyGuard {
 
     /// @notice place bid more than the highest bid amount in chain token like ETH
     /// @dev bidder can place bid only once.
-    function placeBid() public payable allowAfterStart notAfterEnd returns (bool) {
+    function placeBid() public payable whenNotPaused allowAfterStart notAfterEnd returns (bool) {
         require(block.timestamp > startsAt, "< startsAt");
         require(block.timestamp < endsAt, "> endsAt");
         require(msg.value > highestBid, "Bid < highest bid");
@@ -85,7 +88,7 @@ contract Auction is Pausable, CheckContract, ReentrancyGuard {
 
     /// @notice should withdraw the previous highest bids
     /// @dev can withdraw irrespective of the auction status (started or ended).
-    function withdraw() external nonReentrant returns (bool) {
+    function withdraw() external whenNotPaused nonReentrant returns (bool) {
         uint256 amount = currentbids[msg.sender];
         // NOTE: Here, withdrawal of bid amount is possible irrespective of the auction status (started or ended).
         require(amount != highestBid, "highest bidder cannot withdraw");
@@ -100,6 +103,16 @@ contract Auction is Pausable, CheckContract, ReentrancyGuard {
 
         return true;
     }
+
+    // function claimBid() external whenNotPaused nonReentrant allowAfterStart notAfterEnd returns (bool) {
+    //     require(msg.sender == highestBidder, "Only highest bidder can claim");
+    //     require(currentbids[msg.sender] == highestBid, "Only highest bidder can claim");
+
+    //     currentbids[msg.sender] = 0;
+    //     IERC20(asset).transfer(msg.sender, highestBid);
+
+    //     return true;
+    // }
 
     // ------------------------------------------------------------------------------------------
     /// @notice Pause contract
