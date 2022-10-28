@@ -4,7 +4,6 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 import "hardhat/console.sol";
 
 /// @title Generic ERC20 token
@@ -14,6 +13,7 @@ import "hardhat/console.sol";
 contract GenericERC20 is ERC20, Ownable, Pausable {
     // ==========State variables====================================
     uint8 private decimal;
+    address public approvedOwnershipTo;
 
     // ==========Events=============================================
     event TokenMinted(address indexed toAcct, uint256 amount);
@@ -55,15 +55,33 @@ contract GenericERC20 is ERC20, Ownable, Pausable {
 
     function burn(uint256 _amount) external whenNotPaused returns (bool) {
         require(_amount > 0, "amount must be positive");
-        _burn(_msgSender(), _amount);
+        _burn(msg.sender, _amount);
 
-        emit TokenBurnt(_msgSender(), _amount);
+        emit TokenBurnt(msg.sender, _amount);
 
+        return true;
+    }
+
+    function approveOwnership(address newOwner) external onlyOwner whenNotPaused returns (bool) {
+        require(newOwner != address(0), "zero address");
+        // console.log("approveOwnership called by %s for %s", msg.sender, newOwner);
+        approvedOwnershipTo = newOwner;
+
+        return true;
+    }
+
+    function transferFromOwnership(address newOwner) external whenNotPaused returns (bool) {
+        require(msg.sender == approvedOwnershipTo, "Only approved address can call for transfer of ownership");
+        // console.log("caller: %s", msg.sender);
+        // console.log("Before: ownership transferred from: %s to: %s", owner(), newOwner);
+        _transferOwnership(newOwner);
+        // console.log("After: ownership transferred from: %s to: %s", owner(), newOwner);
         return true;
     }
 
     // ------------------------------------------------------------------------------------------
     /// @notice Pause contract
+
     function pause() public onlyOwner whenNotPaused {
         _pause();
     }

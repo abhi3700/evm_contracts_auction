@@ -77,4 +77,8 @@ interface IGenericERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 
     function owner() external view returns (address);
+    function transferOwnership(address newOwner) external;
+    function approveOwnership(address newOwner) external returns (bool);
+    function transferFromOwnership(address newOwner) external returns (bool);
+    function approvedOwnershipTo() external view returns (address);
 }

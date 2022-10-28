@@ -2,11 +2,13 @@
 
 ## About
 
-- **AuctionRepository** is the main contract that allows users to create auctions for asset like ERC20, ERC721, ERC1155, etc.
-- **Auction** contract is a smart contract that allows users to:
+- **AuctionRepository** is the main contract that allows asset owners to create auction (1 per ERC20 asset) for asset standards like ERC20, ERC721, ERC1155, etc.
+- **Auction** contract is a smart contract that allows users (assetOwner, bidder) to:
 
-  - bid for an asset, withdraw bid amount when expired (new bid is more than the highest bid) &
+  - bid for an asset,
   - withdraw the bid amount when a higher bid is placed.
+  - claim possession for the asset when the auction is over.
+  - reclaim the asset when the auction is over and no one has bid for the asset.
 
 - Auction SC contains all the logic & storage for bidding, withdrawing bid amount, etc.
 - The highest bidder automatically becomes the owner of the asset when the auction ends.
@@ -22,17 +24,28 @@
 
 ```mermaid
 flowchart LR
-AuctionRepository --creates for an asset via `createAuction`--> Auction
+AuctionRepository --Asset owner create auction for its asset via `createAuction`--> Auction
 ```
 
 ```mermaid
 flowchart TB
 Auction --bids for an asset--> `bid`
 Auction --withdraw bid amount--> `withdraw`
+Auction --claim Possession--> `claimPossession`
+Auction --reclaim Asset--> `reclaimAsset`
 ```
 
 ```mermaid
-
+sequenceDiagram
+AssetOwner->>Asset: approve Transfer of Ownership to AuctionRepository
+AssetOwner->>AuctionRepository: createAuction
+AuctionRepository->>Auction: deployment i.e. contract creation
+AuctionRepository->>Auction: initialize
+AuctionRepository->>Asset: transferOwnership to Auction
+Bidder->>Auction: bid for the asset
+Bidder->>Auction: withdraw bid amount if bid amount is less than the highest bid
+Bidder->>Auction: claim Possession of the asset if bid amount is the highest & auction is expired
+AssetOwner->>Auction: reclaim Asset if auction is expired & no bid is placed
 ```
 
 ## Installation

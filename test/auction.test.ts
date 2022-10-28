@@ -36,5 +36,20 @@ export function testAuction(): void {
           auctionAddresses[auctionAddresses.length - 1]
         );
         expect(await auctionContract.isLive()).to.be.false;    */
+
+    /* 
+        // verify that the owner of the first auction is not the same as the owner of the second auction
+        AuctionFactory = await ethers.getContractFactory("Auction");
+        const auctionContract1: Contract = AuctionFactory.attach(
+          auctionAddresses[auctionAddresses.length - 1]
+        );
+        const auctionContract2: Contract = AuctionFactory.attach(
+          auctionAddresses[auctionAddresses2.length - 1]
+        );
+
+        expect(await auctionContract1.owner()).to.equal(
+          await auctionContract2.owner()
+        );
+        */
   });
 }

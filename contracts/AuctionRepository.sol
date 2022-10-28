@@ -7,12 +7,14 @@ import "./dependencies/CheckContract.sol";
 import "./dependencies/IGenericERC20.sol";
 import "./interfaces/IAuction.sol";
 import "./Auction.sol";
+import "./dependencies/ReentrancyGuard.sol";
+import "hardhat/console.sol";
 
 /// @title A Auction Repository SC
 /// @author abhi3700
 /// @notice A Auction Repository SC
 /// @dev A Auction Repository SC
-contract AuctionRepository is Ownable, Pausable, CheckContract {
+contract AuctionRepository is Ownable, Pausable, CheckContract, ReentrancyGuard {
     // ==========State variables====================================
     // NOTE: for ERC20, 1 asset can have only 1 auction.
     // But, for NFT standards like ERC721, 1 asset can have multiple auctions with unique token ids.
@@ -35,6 +37,7 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
     function createAuction(address _asset, uint256 _startsAt, uint256 _endsAt)
         external
         whenNotPaused
+        nonReentrant
         returns (address auction)
     {
         require(checkContract(_asset), "Asset not a contract");
@@ -42,18 +45,26 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
         require(_startsAt > block.timestamp, "startsAt < now");
         require(_endsAt > _startsAt, "endsAt < startsAt");
         require(liveAuctions[_asset].length == 0, "Auction already exists");
+        require(
+            IGenericERC20(_asset).approvedOwnershipTo() == address(this), "AuctionRepository not approved for ownership"
+        );
 
         bytes memory bytecode = type(Auction).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(_asset, _startsAt, _endsAt));
         assembly {
             auction := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
+        // console.log("Auction created: %s", auction);
         IAuction(auction).initialize(_asset, _startsAt, _endsAt);
 
         liveAuctions[_asset].push(auction);
         allAuctions[_asset].push(auction);
 
         emit AuctionCreated(auction, _asset);
+
+        // transfer ownership of the auction to the Auction contract created
+        bool success = IGenericERC20(_asset).transferFromOwnership(auction);
+        require(success, "transferFromOwnership failed");
     }
 
     /// @notice should update the list of live auctions for an asset by removing the auction address which is ended

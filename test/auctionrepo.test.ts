@@ -94,6 +94,11 @@ export function testAuctionRepo(): void {
       it("An asset owner should not be able to create auction when paused", async () => {
         await auctionRepoContract.pause();
 
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await expect(
           auctionRepoContract
             .connect(owner)
@@ -106,6 +111,38 @@ export function testAuctionRepo(): void {
       });
 
       it("Only asset owner should be able to create an auction", async () => {
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
+        await auctionRepoContract
+          .connect(owner)
+          .createAuction(
+            assetContract.address,
+            (await getCurrentBlockTimestamp()) + ONE_DAY,
+            (await getCurrentBlockTimestamp()) + THREE_WEEKS
+          );
+        const auctionAddresses: Array<string> =
+          await auctionRepoContract.getLiveAuctions(assetContract.address);
+
+        // verify the last pushed address is the same as the one we just created
+        expect(auctionAddresses[auctionAddresses.length - 1]).to.not.equal(
+          ZERO_ADDRESS
+        );
+
+        // verify that the asset's new owner is the Auction SC
+        expect(await assetContract.owner()).to.equal(
+          auctionAddresses[auctionAddresses.length - 1]
+        );
+      });
+
+      it("asset owner should not be able to create multiple auctions for same asset", async () => {
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -120,22 +157,10 @@ export function testAuctionRepo(): void {
         expect(auctionAddresses[auctionAddresses.length - 1]).to.not.equal(
           ZERO_ADDRESS
         );
-      });
 
-      it("asset owner should not be able to create multiple auctions for same asset", async () => {
-        await auctionRepoContract
-          .connect(owner)
-          .createAuction(
-            assetContract.address,
-            (await getCurrentBlockTimestamp()) + ONE_DAY,
-            (await getCurrentBlockTimestamp()) + THREE_WEEKS
-          );
-        const auctionAddresses: Array<string> =
-          await auctionRepoContract.getAllAuctions(assetContract.address);
-
-        // verify the last pushed address is the same as the one we just created
-        expect(auctionAddresses[auctionAddresses.length - 1]).to.not.equal(
-          ZERO_ADDRESS
+        // verify that the asset's new owner is the Auction SC
+        expect(await assetContract.owner()).to.equal(
+          auctionAddresses[auctionAddresses.length - 1]
         );
 
         // create another auction for the same asset
@@ -147,7 +172,7 @@ export function testAuctionRepo(): void {
               (await getCurrentBlockTimestamp()) + ONE_DAY,
               (await getCurrentBlockTimestamp()) + THREE_WEEKS
             )
-        ).to.be.revertedWith("Auction already exists");
+        ).to.be.revertedWith("Only asset owner can create auction");
       });
 
       it("An owner holding multiple assets can create auction for respective asset", async () => {
@@ -158,6 +183,11 @@ export function testAuctionRepo(): void {
         );
         await assetContract2.deployed();
 
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -165,6 +195,12 @@ export function testAuctionRepo(): void {
             (await getCurrentBlockTimestamp()) + ONE_DAY,
             (await getCurrentBlockTimestamp()) + THREE_WEEKS
           );
+
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract2
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -174,15 +210,24 @@ export function testAuctionRepo(): void {
           );
         const auctionAddresses: Array<string> =
           await auctionRepoContract.getAllAuctions(assetContract.address);
-
         // verify the last pushed address is the same as the one we just created
         expect(auctionAddresses[auctionAddresses.length - 1]).to.not.equal(
           ZERO_ADDRESS
         );
+        // verify that the asset's new owner is the Auction SC
+        expect(await assetContract.owner()).to.equal(
+          auctionAddresses[auctionAddresses.length - 1]
+        );
+
         const auctionAddresses2: Array<string> =
           await auctionRepoContract.getAllAuctions(assetContract2.address);
+        // verify the last pushed address is the same as the one we just created
         expect(auctionAddresses[auctionAddresses2.length - 1]).to.not.equal(
           ZERO_ADDRESS
+        );
+        // verify that the asset2's new owner is the Auction SC
+        expect(await assetContract.owner()).to.equal(
+          auctionAddresses[auctionAddresses.length - 1]
         );
       });
 
@@ -192,6 +237,11 @@ export function testAuctionRepo(): void {
         ).deploy("Rapid Innovation Token 2", "RAPIDO", 9);
         await assetContract2.deployed();
 
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -199,6 +249,12 @@ export function testAuctionRepo(): void {
             (await getCurrentBlockTimestamp()) + ONE_DAY,
             (await getCurrentBlockTimestamp()) + THREE_WEEKS
           );
+
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract2
+          .connect(owner2)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner2)
           .createAuction(
@@ -219,17 +275,14 @@ export function testAuctionRepo(): void {
           ZERO_ADDRESS
         );
 
-        // verify that the owner of the first auction is not the same as the owner of the second auction
-        AuctionFactory = await ethers.getContractFactory("Auction");
-        const auctionContract1: Contract = AuctionFactory.attach(
+        // verify that the asset's new owner is the Auction SC
+        expect(await assetContract.owner()).to.equal(
           auctionAddresses[auctionAddresses.length - 1]
         );
-        const auctionContract2: Contract = AuctionFactory.attach(
-          auctionAddresses[auctionAddresses2.length - 1]
-        );
 
-        expect(await auctionContract1.owner()).to.equal(
-          await auctionContract2.owner()
+        // verify that the asset's new owner is the Auction SC
+        expect(await assetContract.owner()).to.equal(
+          auctionAddresses[auctionAddresses.length - 1]
         );
       });
 
@@ -270,8 +323,13 @@ export function testAuctionRepo(): void {
       });
     });
 
-    describe.only("updateLiveAuctions", () => {
+    describe("updateLiveAuctions", () => {
       it("Only owner should be able to update live auctions", async () => {
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -340,7 +398,7 @@ export function testAuctionRepo(): void {
       });
     });
 
-    describe.only("getLiveAuctions", () => {
+    describe("getLiveAuctions", () => {
       it("should return an empty array if no auctions exist", async () => {
         const auctionAddresses: Array<string> =
           await auctionRepoContract.getLiveAuctions(assetContract.address);
@@ -360,6 +418,12 @@ export function testAuctionRepo(): void {
           (await getCurrentBlockTimestamp()) + ONE_DAY;
         const endAtBefore: number =
           (await getCurrentBlockTimestamp()) + THREE_WEEKS;
+
+        // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
+        assetContract
+          .connect(owner)
+          .approveOwnership(auctionRepoContract.address);
+
         await auctionRepoContract
           .connect(owner)
           .createAuction(assetContract.address, startAtBefore, endAtBefore);
