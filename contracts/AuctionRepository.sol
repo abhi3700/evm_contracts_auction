@@ -26,6 +26,12 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
     // ==========Constructor====================================
     // ==========Functions====================================
 
+    /// @notice Explain to an end user what this does
+    /// @dev Explain to a developer any extra details
+    /// @param _asset The address of the asset
+    /// @param _startsAt The start time of the auction
+    /// @param _endsAt The timestamp at which the auction ends
+    /// @return auction address of the newly created auction
     function createAuction(address _asset, uint256 _startsAt, uint256 _endsAt)
         external
         whenNotPaused
@@ -50,17 +56,19 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
         emit AuctionCreated(auction, _asset);
     }
 
-    /// @notice should update the list of live auctions for an asset
-    /// @dev delete from liveAuctions and add to auctionHistory array
-    function updateLiveAuctions(address _asset, uint256 _arrcount) external onlyOwner {
+    /// @notice should update the list of live auctions for an asset by removing the auction address which is ended
+    /// @dev only delete from liveAuctions & set the liveAuctions to new array obtained
+    /// @param _asset address of the asset
+    /// @param _loopCount loop count for gas optimization
+    function updateLiveAuctions(address _asset, uint256 _loopCount) external onlyOwner whenNotPaused {
         require(checkContract(_asset), "Asset not a contract");
 
         address[] memory auctions = liveAuctions[_asset];
-        require(_arrcount <= auctions.length, "arrcount > liveAuctions.length");
+        require(_loopCount <= auctions.length, "loopCount > liveAuctions.length");
 
-        for (uint256 i = 0; i < _arrcount; ++i) {
+        for (uint256 i = 0; i < _loopCount; ++i) {
             if (block.timestamp > IAuction(auctions[i]).endsAt() && checkContract(auctions[i])) {
-                // auctionHistory[_asset].push(auctions[i]); // add to auctionHistory
+                //// auctionHistory[_asset].push(auctions[i]); // add to auctionHistory
                 delete auctions[i]; // delete auction from liveAuctions
             }
         }
@@ -71,9 +79,19 @@ contract AuctionRepository is Ownable, Pausable, CheckContract {
     /// @notice should rerun all the auctions active + completed i.e. all auctions
     /// @dev should rerun all the auctions active + completed i.e. all auctions
     /// @param _asset the asset for which the auctions are to be rerun
+    /// @return auctions array of all the auctions for the asset
     function getAllAuctions(address _asset) external view returns (address[] memory auctions) {
         require(checkContract(_asset), "Asset not a contract");
         auctions = allAuctions[_asset];
+    }
+
+    /// @notice should rerun all the auctions active
+    /// @dev should rerun all the auctions active
+    /// @param _asset the asset for which the live auctions are to be rerun
+    /// @return auctions array of all the live auctions for the asset
+    function getLiveAuctions(address _asset) external view returns (address[] memory auctions) {
+        require(checkContract(_asset), "Asset not a contract");
+        auctions = liveAuctions[_asset];
     }
 
     /// @notice should return details of an auction

@@ -3,7 +3,12 @@ import chai from "chai";
 import { Contract, ContractFactory } from "ethers";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ZERO_ADDRESS, getCurrentBlockTimestamp } from "./testUtils";
+import {
+  ZERO_ADDRESS,
+  getCurrentBlockTimestamp,
+  setTimestamp,
+  setNextTimestamp,
+} from "./testUtils";
 
 import { ONE_DAY, TWO_DAYS, THREE_WEEKS } from "./helper";
 
@@ -86,7 +91,7 @@ export function testAuctionRepo(): void {
     });
 
     describe("createAuction", () => {
-      it("Should not be able to create auction when paused", async () => {
+      it("An asset owner should not be able to create auction when paused", async () => {
         await auctionRepoContract.pause();
 
         await expect(
@@ -100,7 +105,7 @@ export function testAuctionRepo(): void {
         ).to.be.revertedWith("Pausable: paused");
       });
 
-      it("Only owner should be able to create an auction", async () => {
+      it("Only asset owner should be able to create an auction", async () => {
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -117,7 +122,7 @@ export function testAuctionRepo(): void {
         );
       });
 
-      it("owner should not be able to create multiple auctions for same asset", async () => {
+      it("asset owner should not be able to create multiple auctions for same asset", async () => {
         await auctionRepoContract
           .connect(owner)
           .createAuction(
@@ -145,7 +150,7 @@ export function testAuctionRepo(): void {
         ).to.be.revertedWith("Auction already exists");
       });
 
-      it("1 owner should be able to create multiple auctions for different assets", async () => {
+      it("An owner holding multiple assets can create auction for respective asset", async () => {
         const assetContract2: Contract = await GenericERC20Factory.deploy(
           "Rapid Innovation Token 2",
           "RAPIDO",
@@ -181,7 +186,7 @@ export function testAuctionRepo(): void {
         );
       });
 
-      it("should be able to create multiple auctions for different assets by different owners", async () => {
+      it("Individual owner(s) should be able to create auction for their respective assets", async () => {
         const assetContract2: Contract = await GenericERC20Factory.connect(
           owner2
         ).deploy("Rapid Innovation Token 2", "RAPIDO", 9);
@@ -265,6 +270,62 @@ export function testAuctionRepo(): void {
       });
     });
 
+    describe.only("updateLiveAuctions", () => {
+      it("Only owner should be able to update live auctions", async () => {
+        await auctionRepoContract
+          .connect(owner)
+          .createAuction(
+            assetContract.address,
+            (await getCurrentBlockTimestamp()) + ONE_DAY,
+            (await getCurrentBlockTimestamp()) + THREE_WEEKS
+          );
+        const auctionAddresses: Array<string> =
+          await auctionRepoContract.getAllAuctions(assetContract.address);
+
+        // verify the last pushed address is the same as the one we just created
+        expect(auctionAddresses[auctionAddresses.length - 1]).to.not.equal(
+          ZERO_ADDRESS
+        );
+
+        // console.log(`Before fast-forward: ${await getCurrentBlockTimestamp()}`);
+
+        // fast forward the time to more than endsAt time
+        setTimestamp((await getCurrentBlockTimestamp()) + THREE_WEEKS + 1);
+
+        // console.log(`After fast-forward: ${await getCurrentBlockTimestamp()}`);
+
+        const liveAuctionsBeforeUpdate: Array<string> =
+          await auctionRepoContract.getLiveAuctions(assetContract.address);
+
+        // update live auctions
+        await auctionRepoContract.updateLiveAuctions(assetContract.address, 1);
+
+        const liveAuctionsAfterUpdate: Array<string> =
+          await auctionRepoContract.getLiveAuctions(assetContract.address);
+
+        // verify that the 1st element (only 1 auction per ERC20) of the array after update is not same as before update
+        expect(liveAuctionsBeforeUpdate[0]).to.not.equal(
+          liveAuctionsAfterUpdate[0]
+        );
+      });
+
+      it("Non-owner should not be able to update live auctions", async () => {});
+
+      it("Owner should not be able to update live auctions when paused", async () => {});
+
+      it("should fail when asset is not a contract address", async () => {
+        await expect(
+          auctionRepoContract.updateLiveAuctions(alice.address, 1)
+        ).to.be.revertedWith("Asset not a contract");
+      });
+
+      it("should fail when no auction created", async () => {
+        await expect(
+          auctionRepoContract.updateLiveAuctions(assetContract.address, 1)
+        ).to.be.revertedWith("loopCount > liveAuctions.length");
+      });
+    });
+
     describe("getAllAuctions", () => {
       it("should return an empty array if no auctions exist", async () => {
         const auctionAddresses: Array<string> =
@@ -275,6 +336,20 @@ export function testAuctionRepo(): void {
       it("should fail when asset is not a contract address", async () => {
         await expect(
           auctionRepoContract.getAllAuctions(alice.address)
+        ).to.be.revertedWith("Asset not a contract");
+      });
+    });
+
+    describe.only("getLiveAuctions", () => {
+      it("should return an empty array if no auctions exist", async () => {
+        const auctionAddresses: Array<string> =
+          await auctionRepoContract.getLiveAuctions(assetContract.address);
+        expect(auctionAddresses).to.be.empty;
+      });
+
+      it("should fail when asset is not a contract address", async () => {
+        await expect(
+          auctionRepoContract.getLiveAuctions(alice.address)
         ).to.be.revertedWith("Asset not a contract");
       });
     });

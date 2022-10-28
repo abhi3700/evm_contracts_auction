@@ -109,10 +109,13 @@ contract Auction is Pausable, ReentrancyGuard {
     //     require(currentbids[msg.sender] == highestBid, "Only highest bidder can claim");
 
     //     currentbids[msg.sender] = 0;
+    //     transfer the ownership of the token from existing to new owner
     //     IERC20(asset).transfer(msg.sender, highestBid);
 
     //     return true;
     // }
+
+    // function reclaimAsset()
 
     // ------------------------------------------------------------------------------------------
     /// @notice Pause contract

@@ -26,5 +26,15 @@ chai.use(solidity);
 const { expect } = chai;
 
 export function testAuction(): void {
-  describe("Auction contract", () => {});
+  describe("Auction contract", () => {
+    describe("", () => {});
+
+    /* 
+      // verify that the auction is not live
+        AuctionFactory = await ethers.getContractFactory("Auction");
+        const auctionContract: Contract = AuctionFactory.attach(
+          auctionAddresses[auctionAddresses.length - 1]
+        );
+        expect(await auctionContract.isLive()).to.be.false;    */
+  });
 }
