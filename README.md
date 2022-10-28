@@ -32,6 +32,8 @@ flowchart LR
 AuctionRepository --Asset owner create auction for its asset via `createAuction`--> Auction
 ```
 
+---
+
 ```mermaid
 flowchart TB
 Auction --bids for an asset--> `bid`
@@ -39,6 +41,8 @@ Auction --withdraw bid amount--> `withdraw`
 Auction --claim Possession--> `claimPossession`
 Auction --reclaim Asset--> `reclaimAsset`
 ```
+
+---
 
 ```mermaid
 sequenceDiagram
