@@ -202,10 +202,18 @@ export function testAuction(): void {
       });
 
       it("Should be able to place bid", async () => {
+        const provider = ethers.provider;
+        const balanceInEthBefore = await provider.getBalance(alice.address);
+
         setTimestamp(startsAt + 1);
         await expect(auctionContract.connect(alice).placeBid({ value: 100 }))
           .to.emit(auctionContract, "Bid")
           .withArgs(alice.address, 100);
+
+        const balanceInEthAfter = await provider.getBalance(alice.address);
+
+        // verify eth balance of bidder reduced
+        await expect(balanceInEthBefore).to.be.gt(balanceInEthAfter);
       });
 
       it("Should not be able to bid in succession", async () => {
