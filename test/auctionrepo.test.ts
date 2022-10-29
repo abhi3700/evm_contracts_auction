@@ -115,6 +115,18 @@ export function testAuctionRepo(): void {
         ).to.be.revertedWith("Pausable: paused");
       });
 
+      it("An asset owner should not be able to create auction when not approved the SC", async () => {
+        await expect(
+          auctionRepoContract
+            .connect(owner)
+            .createAuction(
+              assetContract.address,
+              (await getCurrentBlockTimestamp()) + ONE_DAY,
+              (await getCurrentBlockTimestamp()) + THREE_WEEKS
+            )
+        ).to.be.revertedWith("AuctionRepository not approved for ownership");
+      });
+
       it("Only asset owner should be able to create an auction", async () => {
         // approve the 'AuctionRepo SC' to transfer ownership to 'Auction SC'
         assetContract

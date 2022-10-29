@@ -57,6 +57,7 @@ Network Info
       ✔ Owner should not be able to unpause when already unpaused
     createAuction
       ✔ An asset owner should not be able to create auction when paused
+      ✔ An asset owner should not be able to create auction when not approved the SC
       ✔ Only asset owner should be able to create an auction (85ms)
       ✔ asset owner should not be able to create multiple auctions for same asset (106ms)
       ✔ An owner holding multiple assets can create auction for respective asset (213ms)
