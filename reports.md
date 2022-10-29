@@ -27,9 +27,16 @@ Instrumenting for coverage...
 Compilation:
 ============
 
-Generating typings for: 15 artifacts in dir: ./build/typechain/ for target: ethers-v5
+Warning: Contract code size is 30732 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+  --> contracts/AuctionRepository.sol:19:1:
+   |
+19 | contract AuctionRepository is Ownable, Pausable, CheckContract, ReentrancyGuard {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Generating typings for: 14 artifacts in dir: ./build/typechain/ for target: ethers-v5
 Successfully generated 46 typings!
-Compiled 15 Solidity files successfully
+Compiled 14 Solidity files successfully
 
 Network Info
 ============
@@ -50,15 +57,15 @@ Network Info
       ✔ Owner should not be able to unpause when already unpaused
     createAuction
       ✔ An asset owner should not be able to create auction when paused
-      ✔ Only asset owner should be able to create an auction (96ms)
-      ✔ asset owner should not be able to create multiple auctions for same asset (103ms)
-      ✔ An owner holding multiple assets can create auction for respective asset (215ms)
-      ✔ Individual owner(s) should be able to create auction for their respective assets (221ms)
+      ✔ Only asset owner should be able to create an auction (85ms)
+      ✔ asset owner should not be able to create multiple auctions for same asset (106ms)
+      ✔ An owner holding multiple assets can create auction for respective asset (213ms)
+      ✔ Individual owner(s) should be able to create auction for their respective assets (216ms)
       ✔ should fail when asset is not a contract address
       ✔ should fail when startsAt < now
       ✔ should fail when endsAt < startsAt
     updateLiveAuctions
-      ✔ Only owner should be able to update live auctions (120ms)
+      ✔ Only owner should be able to update live auctions (117ms)
       ✔ Non-owner should not be able to update live auctions
       ✔ Owner should not be able to update live auctions when paused
       ✔ should fail when asset is not a contract address
@@ -106,14 +113,14 @@ Network Info
       After auction ends
         ✔ Should not be able to withdraw bid as only/highest bidder
         ✔ Should be able to withdraw bid when someone else is highest bidder
-    claim Bid
-      ✔ Should not be able to claim bid if paused
-      ✔ Should not be able to claim bid before auction starts
+    claim Possession
+      ✔ Should not be able to claim possession if paused
+      ✔ Should not be able to claim possession before auction starts
       After auction ends
-        ✔ Should be able to claim bid as only/highest bidder
-        ✔ Should not be able to claim bid unless one is highest bidder
-        ✔ Should be able to claim bid as highest bidder in case of multiple bids
-        ✔ Should not be able to claim bid if already claimed
+        ✔ Should be able to claim possession as only/highest bidder
+        ✔ Should not be able to claim possession unless one is highest bidder
+        ✔ Should be able to claim possession as highest bidder in case of multiple bids
+        ✔ Should not be able to claim possession if already claimed
     Reclaim Asset
       ✔ Should not be able to reclaim asset if paused
       ✔ Should not be able to reclaim asset before auction starts
@@ -143,6 +150,7 @@ All files                |    89.72 |    79.41 |    84.38 |    90.27 |          
 -------------------------|----------|----------|----------|----------|----------------|
 
 > Istanbul reports written to ./coverage/ and ./coverage.json
+✨  Done in 10.73s.
 ```
 
 ## Deployment

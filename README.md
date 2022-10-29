@@ -27,6 +27,8 @@
 
 - Architecture
 
+Relation b/w AuctionRepository & Auction SCs
+
 ```mermaid
 flowchart LR
 AuctionRepository --Asset owner create auction for its asset via `createAuction`--> Auction
@@ -34,23 +36,37 @@ AuctionRepository --Asset owner create auction for its asset via `createAuction`
 
 ---
 
+**Functions of AuctionRepository SC**
+
 ```mermaid
 flowchart TB
-Auction --bids for an asset--> `bid`
-Auction --withdraw bid amount--> `withdraw`
+AuctionRepository --create auction for an owned asset--> `createAuction`
+AuctionRepository --update record for live Auctions i.e. remove the ones that expired--> `updateLiveAuctions`
+```
+
+---
+
+**Functions of Auction SC**
+
+```mermaid
+flowchart TB
+Auction --bids for an asset--> `placeBid`
+Auction --withdraw bid amount--> `withdrawBid`
 Auction --claim Possession--> `claimPossession`
 Auction --reclaim Asset--> `reclaimAsset`
 ```
 
 ---
 
+**Sequence Diagram for workflow of Auction**
+
 ```mermaid
 sequenceDiagram
 AssetOwner->>Asset: approve Transfer of Ownership to AuctionRepository
-AssetOwner->>AuctionRepository: createAuction
+AssetOwner->>AuctionRepository: `createAuction`
 AuctionRepository->>Auction: deployment i.e. contract creation
 AuctionRepository->>Auction: initialize
-AuctionRepository->>Asset: transferOwnership to Auction
+AuctionRepository->>Asset: transferOwnership to Auction SC
 Bidder->>Auction: bid for the asset
 Bidder->>Auction: withdraw bid amount if bid amount is less than the highest bid
 Bidder->>Auction: claim Possession of the asset if bid amount is the highest & auction is expired

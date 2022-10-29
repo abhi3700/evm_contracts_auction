@@ -287,19 +287,19 @@ export function testAuction(): void {
       });
     });
 
-    describe("claim Bid", async () => {
-      it("Should not be able to claim bid if paused", async () => {
+    describe("claim Possession", async () => {
+      it("Should not be able to claim possession if paused", async () => {
         auctionContract.pause();
 
         await expect(
-          auctionContract.connect(alice).claimBid()
+          auctionContract.connect(alice).claimPossession()
         ).to.be.revertedWith("Pausable: paused");
       });
 
-      it("Should not be able to claim bid before auction starts", async () => {
+      it("Should not be able to claim possession before auction starts", async () => {
         setTimestamp(startsAt - 1);
         await expect(
-          auctionContract.connect(alice).claimBid()
+          auctionContract.connect(alice).claimPossession()
         ).to.be.revertedWith("Auction not ended");
       });
 
@@ -311,25 +311,25 @@ export function testAuction(): void {
             .withArgs(alice.address, 100);
         });
 
-        it("Should be able to claim bid as only/highest bidder", async () => {
+        it("Should be able to claim possession as only/highest bidder", async () => {
           setTimestamp(endsAt + 1);
-          await expect(auctionContract.connect(alice).claimBid())
+          await expect(auctionContract.connect(alice).claimPossession())
             .to.emit(auctionContract, "BidClaimed")
             .withArgs(alice.address);
         });
 
-        it("Should not be able to claim bid unless one is highest bidder", async () => {
+        it("Should not be able to claim possession unless one is highest bidder", async () => {
           await expect(auctionContract.connect(bob).placeBid({ value: 101 }))
             .to.emit(auctionContract, "Bid")
             .withArgs(bob.address, 101);
 
           setTimestamp(endsAt + 1);
           await expect(
-            auctionContract.connect(alice).claimBid()
+            auctionContract.connect(alice).claimPossession()
           ).to.be.revertedWith("Only highest bidder can claim");
         });
 
-        it("Should be able to claim bid as highest bidder in case of multiple bids", async () => {
+        it("Should be able to claim possession as highest bidder in case of multiple bids", async () => {
           await expect(auctionContract.connect(bob).placeBid({ value: 101 }))
             .to.emit(auctionContract, "Bid")
             .withArgs(bob.address, 101);
@@ -341,19 +341,19 @@ export function testAuction(): void {
             .withArgs(charlie.address, 102);
 
           setTimestamp(endsAt + 1);
-          await expect(auctionContract.connect(charlie).claimBid())
+          await expect(auctionContract.connect(charlie).claimPossession())
             .to.emit(auctionContract, "BidClaimed")
             .withArgs(charlie.address);
         });
 
-        it("Should not be able to claim bid if already claimed", async () => {
+        it("Should not be able to claim possession if already claimed", async () => {
           setTimestamp(endsAt + 1);
-          await expect(auctionContract.connect(alice).claimBid())
+          await expect(auctionContract.connect(alice).claimPossession())
             .to.emit(auctionContract, "BidClaimed")
             .withArgs(alice.address);
 
           await expect(
-            auctionContract.connect(alice).claimBid()
+            auctionContract.connect(alice).claimPossession()
           ).to.be.revertedWith("Bid already claimed");
         });
       });

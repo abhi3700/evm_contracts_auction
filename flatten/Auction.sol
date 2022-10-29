@@ -505,7 +505,7 @@ contract Auction is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice claim bid as highest bidder only after the auction ends.
     /// @return status true if successful
-    function claimBid() external whenNotPaused nonReentrant returns (bool) {
+    function claimPossession() external whenNotPaused nonReentrant returns (bool) {
         require(block.timestamp > endsAt, "Auction not ended");
         require(msg.sender == highestBidder, "Only highest bidder can claim");
         uint256 _currentBid = currentbids[msg.sender];
@@ -552,4 +552,4 @@ contract Auction is Ownable, Pausable, ReentrancyGuard {
         _unpause();
     }
 }
-Done in 0.94s.
+Done in 0.89s.
