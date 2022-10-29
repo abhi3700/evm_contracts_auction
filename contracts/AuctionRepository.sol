@@ -110,13 +110,14 @@ contract AuctionRepository is Ownable, Pausable, CheckContract, ReentrancyGuard 
     function fetchAuction(address _auctionContract)
         external
         view
-        returns (address asset, uint256 creationTime, uint256 startsAt, uint256 endsAt)
+        returns (address asset, address originalAssetOwner, uint256 creationTime, uint256 startsAt, uint256 endsAt)
     {
         require(checkContract(_auctionContract), "Auction not a contract");
         asset = IAuction(_auctionContract).asset();
         creationTime = IAuction(_auctionContract).creationTime();
         startsAt = IAuction(_auctionContract).startsAt();
         endsAt = IAuction(_auctionContract).endsAt();
+        originalAssetOwner = IAuction(_auctionContract).originalAssetOwner();
     }
 
     // ------------------------------------------------------------------------------------------

@@ -10,6 +10,10 @@ interface IAuction {
     function creationTime() external view returns (uint256);
     function startsAt() external view returns (uint256);
     function endsAt() external view returns (uint256);
+    function highestBid() external view returns (uint256);
+    function highestBidder() external view returns (address);
+    function auctionRepository() external view returns (address);
+    function originalAssetOwner() external view returns (address);
     function initialize(address _owner, address _originalAssetOwner, address _asset, uint256 _startsAt, uint256 _endsAt)
         external
         returns (bool);

@@ -447,13 +447,14 @@ export function testAuctionRepo(): void {
 
         const auctionAddresses: Array<string> =
           await auctionRepoContract.getAllAuctions(assetContract.address);
-        const [asset, _, startAt, endAt] =
+        const [asset, originalAssetOwner, _, startAt, endAt] =
           await auctionRepoContract.fetchAuction(
             auctionAddresses[auctionAddresses.length - 1]
           );
 
         // verify the details of auction with the set input values
         expect(asset).to.equal(assetContract.address);
+        expect(originalAssetOwner).to.equal(owner.address);
         expect(startAt).to.equal(startAtBefore);
         expect(endAt).to.equal(endAtBefore);
       });

@@ -817,4 +817,4 @@ contract GenericERC20 is ERC20, Ownable, Pausable {
         _unpause();
     }
 }
-Done in 0.64s.
+Done in 0.62s.
